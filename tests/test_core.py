@@ -79,4 +79,9 @@ def test_register():
     assert response == test_response
     assert [(test_case, test_response)] == hr.additional_sites
     
+    # add again the same thing, nothing should change
+    response = hr.register_additional_site(test_case)
+    assert response == test_response
+    assert [(test_case, test_response)] == hr.additional_sites
+    
     

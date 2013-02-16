@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import furl
+from furl import furl
 import os
 
 KEYWORD_EXCLUDE_END = '<!-- highroller: exclude end -->'
@@ -29,7 +29,9 @@ class Highroller:
         else:
             outputname = os.path.join("/static/", url)
         
-        self.additional_sites.append((url, outputname))
+        if not  (url, outputname) in self.additional_sites:
+            self.additional_sites.append((url, outputname))
+            
         return outputname
 
     def _run_exclude(self, content_original):
@@ -91,13 +93,22 @@ class Highroller:
         # write new content
         ################################################################
         
-        print content_original
+
+        if element[1][0] == '/':
+            destination = os.path.join(os.path.dirname(__file__),element[1][1:])
+        else:
+            destination = os.path.join(os.path.dirname(__file__),element[1])
+        
+        with open(destination, 'w') as f:
+            f.write(content_original)
         # write content here to element 1
 
-if __name__ == 'main':
+if __name__ == '__main__':
+    print "yeah"
     hr = Highroller()
     hr.domain = "http://localhost"
-    hr.additional_sites.append(("/", "index.html"))
+    #hr.additional_sites.append(("/", "index.html"))
+    hr.register_additional_site("/index.html")
     for element in hr.additional_sites:
         print "------------roll------------"
         hr.roll_site(element)
