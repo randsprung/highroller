@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import requests
-
+import furl
+import os
 
 KEYWORD_EXCLUDE_END = '<!-- highroller: exclude end -->'
 KEYWORD_EXCLUDE_START = '<!-- highroller: exclude start -->'
@@ -12,65 +13,93 @@ KEYWORD_ADDITIONAL_START = '<!-- highroller: additional start -->'
 KEYWORD_AURL_START = 'href="'
 KEYWORD_AURL_END = '"'
 
-additional_sites = []
+
+class Highroller:
+    def __init__(self):
+        self.domain = ''
+        self.additional_sites = []
 
 
-def register_additional_site(url):
-    outputname = "/static/" + url
-    additional_sites.append((url, outputname))
-    return outputname
 
+    def register_additional_site(self, url):
+        """ Please overwrite this function to get custom url handling
+        """
+        if url[0] == '/':
+            outputname = os.path.join("/static/", url[1:])        
+        else:
+            outputname = os.path.join("/static/", url)
+        
+        self.additional_sites.append((url, outputname))
+        return outputname
 
-def roll_site(element):
-    target_url = domain + "/" + element[0]
-    response = requests.get(target_url)
-    content_original = response.content
+    def _run_exclude(self, content_original):
 
-    ################################################################
-    # remove unused parts
-    ################################################################
+        hit = True
+        while hit:
+            hit = False
+            occurence_start = content_original.find(
+                KEYWORD_EXCLUDE_START)
+            if not occurence_start == -1:
+                occurence_end = content_original.index(
+                    KEYWORD_EXCLUDE_END)
+                content_original = content_original[:occurence_start] + \
+                    content_original[occurence_end + len(KEYWORD_EXCLUDE_END):]
+                hit = True
+        return content_original
 
-    hit = True
-    while hit:
-        hit = False
-        occurence_start = content_original.find(
-            KEYWORD_EXCLUDE_START)
-        if not occurence_start == -1:
-            occurence_end = content_original.index(
-                KEYWORD_EXCLUDE_END)
-            content_original = content_original[:occurence_start] + \
-                content_original[occurence_end + len(KEYWORD_EXCLUDE_END):]
-            hit = True
+    def _run_additional(self, content_original):
+        hit = True
+        while hit:
+            hit = False
+            occurence_start = content_original.find(
+                KEYWORD_ADDITIONAL_START)
+            if not occurence_start == -1:
+                occurence_end = content_original.index(
+                    KEYWORD_ADDITIONAL_END)
+                # clean hit
+                a_hit = content_original[occurence_start + len(
+                    KEYWORD_ADDITIONAL_START):occurence_end]
+                a1 = a_hit.find(KEYWORD_AURL_START)
+                a2 = a_hit[a1 + len(KEYWORD_AURL_START):].find(KEYWORD_AURL_END)
+                url = a_hit[a1 + len(KEYWORD_AURL_START):a1 + len(
+                    KEYWORD_AURL_START) + a2]
+                content_original = content_original[:occurence_start] + a_hit[:a1 + len(KEYWORD_AURL_START)] + self.register_additional_site(
+                    url) + a_hit[a1 + len(KEYWORD_AURL_START) + a2:] + content_original[occurence_end + len(KEYWORD_ADDITIONAL_END):]
+                hit = True
+        return content_original
 
-    ################################################################
-    # rewrite links
-    ################################################################
+    def roll_site(self, element):
+        ################################################################
+        # get content
+        ################################################################
+        
+        f = furl(self.domain)
+        f.path = str(f.path) + element[0]
+        target_url = f.url
+        response = requests.get(target_url)
+        content_original = response.content
 
-    hit = True
-    while hit:
-        hit = False
-        occurence_start = content_original.find(
-            KEYWORD_ADDITIONAL_START)
-        if not occurence_start == -1:
-            occurence_end = content_original.index(
-                KEYWORD_ADDITIONAL_END)
-            # clean hit
-            a_hit = content_original[occurence_start + len(
-                KEYWORD_ADDITIONAL_START):occurence_end]
-            a1 = a_hit.find(KEYWORD_AURL_START)
-            a2 = a_hit[a1 + len(KEYWORD_AURL_START):].find(KEYWORD_AURL_END)
-            url = a_hit[a1 + len(KEYWORD_AURL_START):a1 + len(
-                KEYWORD_AURL_START) + a2]
-            content_original = content_original[:occurence_start] + a_hit[:a1 + len(KEYWORD_AURL_START)] + register_additional_site(
-                url) + a_hit[a1 + len(KEYWORD_AURL_START) + a2:] + content_original[occurence_end + len(KEYWORD_ADDITIONAL_END):]
-            hit = True
-    print content_original
-    # write content here to element 1
+        ################################################################
+        # remove unused parts
+        ################################################################
+        content_original = self._run_exclude(content_original)
+        ################################################################
+        # rewrite links and find new pages
+        ################################################################
+        content_original = self._run_additional(content_original)
+        ################################################################
+        # write new content
+        ################################################################
+        
+        print content_original
+        # write content here to element 1
 
-domain = "http://localhost"
-additional_sites.append(("/", "index.html"))
-for element in additional_sites:
-    print "------------roll------------"
-    roll_site(element)
+if __name__ == 'main':
+    hr = Highroller()
+    hr.domain = "http://localhost"
+    hr.additional_sites.append(("/", "index.html"))
+    for element in hr.additional_sites:
+        print "------------roll------------"
+        hr.roll_site(element)
 
-print additional_sites
+    print hr.additional_sites
