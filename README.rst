@@ -18,9 +18,11 @@ For Example, this is your dynamic webpage::
 Highroller retrieves and saves the HTML. He removes everything between the "exculude" tags and looks for links wrapped in an "additional" tags. The additional links are gathered and then crawled as well. The link itself is rewritten to match the new static loation of the new generated link target.i
 
 Place the script somewhere nice, include the Highrollerclass and use it::
+
    from highroller import Highroller
    hr = Highroller()
    hr.domain = "http://localhost"
    hr.register_additional_site("/index.html")
    for element in hr.additional_sites:
        hr.roll_site(element)
+
