@@ -18,27 +18,24 @@ class Highroller:
     def __init__(self):
         self.domain = ''
         self.additional_sites = []
-        self.inject_head=''
-        self.inject_body=''
+        self.inject_head = ''
+        self.inject_body = ''
+        self.output_dir = '/static/'
 
     def register_additional_site(self, url):
         """ Please overwrite this function to get custom url handling
         """
-        
         if url[0] == '/':
-            outputname = os.path.join("/static/", url[1:])        
+            outputname = os.path.join(self.output_dir, url[1:])
         elif url.startswith("http"):
             f = furl(url)
-            outputname = os.path.join("/static/", str(f.path)[1:])
-
+            outputname = os.path.join(self.output_dir, str(f.path)[1:])
         else:
-            outputname = os.path.join("/static/", url)
-        
+            outputname = os.path.join(self.output_dir, url)
         if not outputname.endswith("html"):
             outputname = os.path.join(outputname, "index.html")
-        if not  (url, outputname) in self.additional_sites:
+        if not (url, outputname) in self.additional_sites:
             self.additional_sites.append((url, outputname))
-            
         return outputname
 
     def _run_exclude(self, content_original):
@@ -69,7 +66,8 @@ class Highroller:
                 a_hit = content_original[occurence_start + len(
                     KEYWORD_ADDITIONAL_START):occurence_end]
                 a1 = a_hit.find(KEYWORD_AURL_START)
-                a2 = a_hit[a1 + len(KEYWORD_AURL_START):].find(KEYWORD_AURL_END)
+                a2 = a_hit[a1 + len(KEYWORD_AURL_START):
+                           ].find(KEYWORD_AURL_END)
                 url = a_hit[a1 + len(KEYWORD_AURL_START):a1 + len(
                     KEYWORD_AURL_START) + a2]
                 content_original = content_original[:occurence_start] + a_hit[:a1 + len(KEYWORD_AURL_START)] + self.register_additional_site(
@@ -77,55 +75,40 @@ class Highroller:
                 hit = True
         return content_original
 
-    def roll_site(self, element):
-        ################################################################
-        # get content
-        ################################################################
-        
+    def _get_content(self, element):
         f = furl(self.domain)
         f.path = str(f.path) + element[0]
         target_url = f.url
         response = requests.get(target_url)
-        content_original = response.content
-        content_original = content_original.replace("</head>", self.inject_head + "</head>")
-        content_original = content_original.replace("</body>", self.inject_body + "</body>")
+        return response.content
 
-
-        ################################################################
-        # remove unused parts
-        ################################################################
+    def roll_site(self, element):
+        content_original = self._get_content(element)
+        content_original = content_original.replace(
+            "</head>", self.inject_head + "</head>")
+        content_original = content_original.replace(
+            "</body>", self.inject_body + "</body>")
         content_original = self._run_exclude(content_original)
-        ################################################################
-        # rewrite links and find new pages
-        ################################################################
         content_original = self._run_additional(content_original)
-        ################################################################
-        # write new content
-        ################################################################
-        
-        if element[1][0] == '/':
-            destination = os.path.join(os.path.dirname(__file__),element[1][1:])
-        else:
-            destination = os.path.join(os.path.dirname(__file__),element[1])
-        
 
+        if element[1][0] == '/':
+            destination = os.path.join(
+                os.path.dirname(__file__), element[1][1:])
+        else:
+            destination = os.path.join(os.path.dirname(__file__), element[1])
         if not os.path.exists(os.path.dirname(destination)):
             os.makedirs(os.path.dirname(destination))
 
         with open(destination, 'w') as f:
             f.write(content_original)
-        # write content here to element 1
+        return content_original
 
 if __name__ == '__main__':
-    print "yeah"
     hr = Highroller()
     hr.domain = "http://localhost"
-    hr.inject_head="<!-- headinject -->"
-    hr.inject_body="<!-- bodyinject -->"
-    #hr.additional_sites.append(("/", "index.html"))
+    hr.inject_head = "<!-- headinject -->"
+    hr.inject_body = "<!-- bodyinject -->"
     hr.register_additional_site("/index.html")
     for element in hr.additional_sites:
-        print "------------roll------------"
+        print "roll: {0}".format(element[0])
         hr.roll_site(element)
-
-    print hr.additional_sites

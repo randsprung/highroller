@@ -3,7 +3,7 @@ from highroller import Highroller
 
 def test_exclude():
     """Check if the exclude function works and only removed the start and end tags and everything in between, nothing more or less"""
-    
+
     test_case = """<html><body><h1>It works!</h1>
 <p>This is the default web page for this server.</p>
 <p>The web server software is running but no content has been added, yet.</p>
@@ -71,17 +71,31 @@ dont show me 2
     assert test_response == response
 
 
-def test_register():
+def test_register_additional_site():
     test_case = "/index.html"
     test_response = "/static/index.html"
     hr = Highroller()
     response = hr.register_additional_site(test_case)
     assert response == test_response
     assert [(test_case, test_response)] == hr.additional_sites
-    
+
     # add again the same thing, nothing should change
     response = hr.register_additional_site(test_case)
     assert response == test_response
     assert [(test_case, test_response)] == hr.additional_sites
-    
-    
+
+
+def test_inject():
+    def _get_content_custom(self):
+        response = """<html><head></head><body><h1>It works!</h1></body></html>"""
+        return response
+
+    hr = Highroller()
+    hr._get_content = _get_content_custom
+    hr.inject_head = "<!-- headinject -->"
+    hr.inject_body = "<!-- bodyinject -->"
+    hr.register_additional_site("/index.html")
+    assert len(hr.additional_sites) == 1
+    for element in hr.additional_sites:
+        response = hr.roll_site(element)
+        assert response == """<html><head><!-- headinject --></head><body><h1>It works!</h1><!-- bodyinject --></body></html>"""
