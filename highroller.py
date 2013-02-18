@@ -18,17 +18,24 @@ class Highroller:
     def __init__(self):
         self.domain = ''
         self.additional_sites = []
-
-
+        self.inject_head=''
+        self.inject_body=''
 
     def register_additional_site(self, url):
         """ Please overwrite this function to get custom url handling
         """
+        
         if url[0] == '/':
             outputname = os.path.join("/static/", url[1:])        
+        elif url.startswith("http"):
+            f = furl(url)
+            outputname = os.path.join("/static/", str(f.path)[1:])
+
         else:
             outputname = os.path.join("/static/", url)
         
+        if not outputname.endswith("html"):
+            outputname = os.path.join(outputname, "index.html")
         if not  (url, outputname) in self.additional_sites:
             self.additional_sites.append((url, outputname))
             
@@ -80,6 +87,9 @@ class Highroller:
         target_url = f.url
         response = requests.get(target_url)
         content_original = response.content
+        content_original = content_original.replace("</head>", self.inject_head + "</head>")
+        content_original = content_original.replace("</body>", self.inject_body + "</body>")
+
 
         ################################################################
         # remove unused parts
@@ -93,12 +103,15 @@ class Highroller:
         # write new content
         ################################################################
         
-
         if element[1][0] == '/':
             destination = os.path.join(os.path.dirname(__file__),element[1][1:])
         else:
             destination = os.path.join(os.path.dirname(__file__),element[1])
         
+
+        if not os.path.exists(os.path.dirname(destination)):
+            os.makedirs(os.path.dirname(destination))
+
         with open(destination, 'w') as f:
             f.write(content_original)
         # write content here to element 1
@@ -107,6 +120,8 @@ if __name__ == '__main__':
     print "yeah"
     hr = Highroller()
     hr.domain = "http://localhost"
+    hr.inject_head="<!-- headinject -->"
+    hr.inject_body="<!-- bodyinject -->"
     #hr.additional_sites.append(("/", "index.html"))
     hr.register_additional_site("/index.html")
     for element in hr.additional_sites:
