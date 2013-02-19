@@ -76,10 +76,13 @@ class Highroller:
         return content_original
 
     def _get_content(self, element):
-        f = furl(self.domain)
-        f.path = str(f.path) + element[0]
-        target_url = f.url
-        response = requests.get(target_url)
+        if element[0].startswith('http'):
+            target_url = element[0]
+        else:
+            f = furl(self.domain)
+            f.path = str(f.path) + element[0]
+            target_url = f.url
+        response = requests.get(target_url)#, headers=headers)
         return response.content
 
     def roll_site(self, element):
