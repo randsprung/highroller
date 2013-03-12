@@ -70,6 +70,30 @@ dont show me 2
     response = hr._run_additional(test_case)
     assert test_response == response
 
+def test_include():
+    test_case = """<html><body><!-- highroller: include start --<h1>It works!</h1>!-- highroller: include end -->
+<p>This is the default web page for this server.</p>
+<p>The web server software is running but no content has been added, yet.</p>
+<!-- --><!-- highroller: include start --<h1>Show me!</h1>!-- highroller: include end -->
+<!-- highroller: exclude start -->
+dont show me 2
+<!-- highroller: exclude end -->
+</body></html>"""
+
+    test_response = """<html><body><h1>It works!</h1>
+<p>This is the default web page for this server.</p>
+<p>The web server software is running but no content has been added, yet.</p>
+<!-- --><h1>Show me!</h1>
+<!-- highroller: exclude start -->
+dont show me 2
+<!-- highroller: exclude end -->
+</body></html>"""
+
+    hr = Highroller()
+    response = hr._run_include(test_case)
+    print response
+    assert test_response == response
+
 
 def test_register_additional_site():
     test_case = "/index.html"
@@ -99,3 +123,7 @@ def test_inject():
     for element in hr.additional_sites:
         response = hr.roll_site(element)
         assert response == """<html><head><!-- headinject --></head><body><h1>It works!</h1><!-- bodyinject --></body></html>"""
+
+if __name__ == '__main__':
+    print "test"
+    test_include()

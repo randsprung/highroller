@@ -2,10 +2,13 @@
 
 import requests
 from furl import furl
-import os
+import os, sys
 
 KEYWORD_EXCLUDE_END = '<!-- highroller: exclude end -->'
 KEYWORD_EXCLUDE_START = '<!-- highroller: exclude start -->'
+
+KEYWORD_INCLUDE_END = '!-- highroller: include end -->'
+KEYWORD_INCLUDE_START = '<!-- highroller: include start --'
 
 KEYWORD_ADDITIONAL_END = '<!-- highroller: additional end -->'
 KEYWORD_ADDITIONAL_START = '<!-- highroller: additional start -->'
@@ -53,6 +56,24 @@ class Highroller:
                 hit = True
         return content_original
 
+    def _run_include(self, content_original):
+
+        hit = True
+        while hit:
+            hit = False
+            occurence_start = content_original.find(
+                KEYWORD_INCLUDE_START)
+            if not occurence_start == -1:
+                occurence_end = content_original.index(
+                    KEYWORD_INCLUDE_END)
+
+                #[:start] + [start + len(start):end] + [end + len(end):]
+                content_original = content_original[:occurence_start] + \
+                    content_original[occurence_start + len(KEYWORD_INCLUDE_START):occurence_end] + \
+                    content_original[occurence_end + len(KEYWORD_INCLUDE_END):]
+                hit = True
+        return content_original
+
     def _run_additional(self, content_original):
         hit = True
         while hit:
@@ -91,6 +112,7 @@ class Highroller:
             "</head>", self.inject_head + "</head>")
         content_original = content_original.replace(
             "</body>", self.inject_body + "</body>")
+        content_original = self._run_include(content_original)
         content_original = self._run_exclude(content_original)
         content_original = self._run_additional(content_original)
 
