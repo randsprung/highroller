@@ -12,10 +12,11 @@ For Example, this is your dynamic webpage::
    <!-- highroller: exclude start -->
    dont render me
    <!-- highroller: exclude end -->
+   <!-- highroller: include start--Show me in static mode!-- highroller: include end -->
    <!-- highroller: additional start --><a href="index2.html">Index 2</a><!-- highroller: additional end -->
    </body></html>
 
-Highroller retrieves and saves the HTML. He removes everything between the "exculude" tags and looks for links wrapped in an "additional" tags. The additional links are gathered and then crawled as well. The link itself is rewritten to match the new static loation of the new generated link target.i
+Highroller retrieves and saves the HTML. He removes everything between the "exculude" tags, uncomment all "include" tags and looks for links wrapped in an "additional" tags. The additional links are gathered and then crawled as well. The link itself is rewritten to match the new static loation of the new generated link target.i
 
 Place the script somewhere nice, include the Highrollerclass and use it::
 
