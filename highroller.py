@@ -28,7 +28,7 @@ class Highroller:
     def register_additional_site(self, url):
         """ Please overwrite this function to get custom url handling
         """
-        if url[0] == '/':
+        if len(url) and url[0] == '/':
             outputname = os.path.join(self.output_dir, url[1:])
         elif url.startswith("http"):
             f = furl(url)
@@ -91,7 +91,9 @@ class Highroller:
                            ].find(KEYWORD_AURL_END)
                 url = a_hit[a1 + len(KEYWORD_AURL_START):a1 + len(
                     KEYWORD_AURL_START) + a2]
-                url = url.replace("#/", "")
+                if '#' in url:
+                    url = url.replace('#/', '')
+                print "found url:", url
                 content_original = content_original[:occurence_start] + a_hit[:a1 + len(KEYWORD_AURL_START)] + self.register_additional_site(
                     url) + a_hit[a1 + len(KEYWORD_AURL_START) + a2:] + content_original[occurence_end + len(KEYWORD_ADDITIONAL_END):]
                 hit = True
