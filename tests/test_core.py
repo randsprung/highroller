@@ -91,7 +91,6 @@ dont show me 2
 
     hr = Highroller()
     response = hr._run_include(test_case)
-    print response
     assert test_response == response
 
 
