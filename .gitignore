@@ -36,6 +36,7 @@ nosetests.xml
 .project
 .pydevproject
 mgp.py
+mgp_live.py
 docs/_build
 tests/htmlcov
 static/
