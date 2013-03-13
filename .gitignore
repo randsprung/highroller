@@ -35,6 +35,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+.DS_Store
 mgp.py
 mgp_live.py
 docs/_build
