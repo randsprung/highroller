@@ -2,7 +2,7 @@
 
 import requests
 from furl import furl
-import os, sys
+import os, sys, shutil
 
 KEYWORD_EXCLUDE_END = '<!-- highroller: exclude end -->'
 KEYWORD_EXCLUDE_START = '<!-- highroller: exclude start -->'
@@ -129,6 +129,18 @@ class Highroller:
         with open(destination, 'w') as f:
             f.write(content_original)
         return content_original
+
+    def delete_site(self):
+        folder = 'static'
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                else:
+                    shutil.rmtree(file_path)
+            except Exception, e:
+                print e
 
 if __name__ == '__main__':
     hr = Highroller()
