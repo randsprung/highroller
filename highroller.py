@@ -91,8 +91,10 @@ class Highroller:
                            ].find(KEYWORD_AURL_END)
                 url = a_hit[a1 + len(KEYWORD_AURL_START):a1 + len(
                     KEYWORD_AURL_START) + a2]
-                if '#' in url:
-                    url = url.replace('#/', '')
+                
+                url = url.replace('#', '/')
+                url = url.replace('//', '/')
+
                 content_original = content_original[:occurence_start] + a_hit[:a1 + len(KEYWORD_AURL_START)] + self.register_additional_site(
                     url) + a_hit[a1 + len(KEYWORD_AURL_START) + a2:] + content_original[occurence_end + len(KEYWORD_ADDITIONAL_END):]
                 hit = True
